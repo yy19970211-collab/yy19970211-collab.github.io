@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/article.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -39,6 +39,32 @@
 
   <script src="assets/marked.min.js"></script>
   <script>
+    // 渲染 Markdown: 先保护公式占位, 再 marked 渲染, 最后还原为可被 KaTeX 识别的 $..$ 标记
+    function renderArticle(md){
+      const block=[], inline=[];
+      // 1. 保护 $$...$$ 块公式
+      md = md.replace(/\$\$([\s\S]+?)\$\$/g, function(_,eq){ block.push(eq); return '\u0001B'+(block.length-1)+'\u0001'; });
+      // 2. 保护 $...$ 行内公式
+      md = md.replace(/(^|[^\\$])\$([^$\n]+?)\$/g, function(_,pre,eq){ inline.push(eq); return pre+'\u0001I'+(inline.length-1)+'\u0001'; });
+      // 3. marked 渲染
+      let html = marked.parse(md);
+      // 3.5 图片加图注: <img alt="图一 xxx" src="..."> → <figure><img …><figcaption>图一 xxx</figcaption></figure>
+      html = html.replace(/<img\b([^>]*)>/g, function(_, attrs){
+        const m = attrs.match(/src="([^"]*)"/);
+        const a = attrs.match(/alt="([^"]*)"/);
+        if(!m || !a) return '<img'+attrs+'>';
+        const cap = a[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+        return '<figure class="fig"><img'+attrs+'><figcaption>'+cap+'</figcaption></figure>';
+      });
+      // 4. 还原行内公式
+      html = html.replace(/\u0001I(\d+)\u0001/g, function(_,i){ return '$'+inline[+i]+'$'; });
+      // 5. 还原块公式(转成 <div class=math> 防止 marked 二次处理)
+      html = html.replace(/\u0001B(\d+)\u0001/g, function(_,i){
+        const eq = block[+i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return '<div class="math-block">$$'+eq+'$$</div>';
+      });
+      return html;
+    }
     const params = new URLSearchParams(location.search);
     const id = params.get('id');
     if(!id){ document.getElementById('aBody').innerHTML='<p class="empty">未指定文章。</p>'; }
@@ -54,17 +80,23 @@
         return fetch(a.file).then(r=>r.text());
       }).then(md=>{
         if(md){
-          document.getElementById('aBody').innerHTML = marked.parse(md);
-          // 渲染数学公式
-          if(window.renderMathInElement){
-            renderMathInElement(document.getElementById('aBody'), {
-              delimiters: [
-                {left:'$$', right:'$$', display:true},
-                {left:'$', right:'$', display:false}
-              ],
-              throwOnError:false
-            });
-          }
+          const body = document.getElementById('aBody');
+          body.innerHTML = renderArticle(md);
+          // 等待 KaTeX 就绪后渲染公式
+          const tryRender = function(){
+            if(window.renderMathInElement){
+              renderMathInElement(body, {
+                delimiters: [
+                  {left:'$$', right:'$$', display:true},
+                  {left:'$', right:'$', display:false}
+                ],
+                throwOnError:false
+              });
+            } else {
+              setTimeout(tryRender, 150);
+            }
+          };
+          tryRender();
         }
       }).catch(()=>{
         document.getElementById('aBody').innerHTML='<p class="empty">文章加载失败。</p>';
