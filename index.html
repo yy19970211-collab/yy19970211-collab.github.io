@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>光影与数学 · 我的数字花园</title>
+<meta name="description" content="我的主页：数学可视化、印象笔记、随笔与工具。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="site-header">
+    <nav class="shell nav" aria-label="主导航">
+      <a class="brand" href="./">光影与数学</a>
+      <div class="nav-links">
+        <a href="#about">关于</a>
+        <a href="#visual">可视化</a>
+        <a href="#articles">文章</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main" class="shell">
+    <!-- Hero -->
+    <section class="hero">
+      <p class="kicker">印象 · 数学 · 随笔</p>
+      <h1 class="hero-title">把光，<em>折</em>进公式里。</h1>
+      <p class="lede">这里收集我做的数学可视化、公众号文章与随手记下的想法。
+         用印象派的眼光看数学：模糊的边缘背后，是精确的形状。</p>
+    </section>
+
+    <!-- 关于 -->
+    <section id="about" class="section">
+      <div class="sec-head">
+        <span class="sec-index">ABOUT</span>
+        <h2 class="sec-title">关于我</h2>
+      </div>
+      <p class="sec-copy">一个喜欢把抽象概念画出来的人。用三维可视化讲清微分几何与拓扑，偶尔写写公众号，也收藏些小工具。</p>
+    </section>
+
+    <!-- 可视化 -->
+    <section id="visual" class="section">
+      <div class="sec-head">
+        <span class="sec-index">VISUAL</span>
+        <h2 class="sec-title">数学可视化</h2>
+      </div>
+      <div class="card-grid">
+        <article class="card" style="--accent:#c8d8e8">
+          <span class="card-kicker">几何 · 拓扑</span>
+          <h3 class="card-title">莫比乌斯带</h3>
+          <p class="card-copy">一条只有单面的纸带，法向量走完一圈后反转。</p>
+          <a class="btn" href="visual/mobius.html">打开演示</a>
+        </article>
+        <article class="card" style="--accent:#e8d8c8">
+          <span class="card-kicker">微分几何</span>
+          <h3 class="card-title">和乐性 Holonomy</h3>
+          <p class="card-copy">在曲面上平行移动向量，绕一圈后方向偏转的角度。</p>
+          <a class="btn" href="visual/holonomy.html">打开演示</a>
+        </article>
+        <article class="card" style="--accent:#d8e8d8">
+          <span class="card-kicker">全局高斯博内</span>
+          <h3 class="card-title">∫∫K dA = 2πχ</h3>
+          <p class="card-copy">五步可视化证明：角盈、剖分、欧拉公式、亏格与一般曲面。</p>
+          <a class="btn" href="visual/ggb.html">打开演示</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- 文章 -->
+    <section id="articles" class="section">
+      <div class="sec-head">
+        <span class="sec-index">ARTICLES</span>
+        <h2 class="sec-title">文章</h2>
+      </div>
+      <p class="sec-copy dim">公众号文章将陆续整理到这里（待导入）。</p>
+      <div class="article-list" id="articleList">
+        <p class="empty">还没有文章。第一篇正在路上……</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer shell">
+    <span>光影与数学</span>
+    <span class="dim">印象派 · 简约 · 2026</span>
+  </footer>
+</body>
+</html>
