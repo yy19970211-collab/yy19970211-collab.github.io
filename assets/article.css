@@ -21,6 +21,12 @@
   max-width:100%; height:auto; border-radius:8px; margin:1.6em auto; display:block;
   box-shadow:0 6px 24px rgba(120,110,90,.12);
 }
+.article-body figure.fig{ margin:2em 0; text-align:center; }
+.article-body figure.fig img{ margin:0 auto; }
+.article-body figure.fig figcaption{
+  font-size:13px; color:var(--dim); margin-top:10px; letter-spacing:.04em;
+  font-style:italic;
+}
 .article-body ol, .article-body ul{ margin:1em 0; padding-left:1.6em; }
 .article-body li{ margin:.4em 0; }
 .article-body a{ color:var(--accent); border-bottom:1px solid rgba(176,144,112,.4); }
@@ -29,6 +35,7 @@
 /* 数学公式(KaTeX 或等宽 fallback) */
 .article-body .katex{ font-size:1.05em; }
 .article-body .katex-display{ margin:1.4em 0; overflow-x:auto; overflow-y:hidden; }
+.article-body .math-block{ text-align:center; margin:1.6em 0; overflow-x:auto; }
 
 .article-foot{ margin-top:60px; padding-top:24px; border-top:1px solid var(--line); display:flex; gap:14px; }
 
