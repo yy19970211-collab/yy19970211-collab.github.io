@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>莫比乌斯带 · 交互演示</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#0a1520; font-family:"Microsoft YaHei", Arial, sans-serif; }
+  #hint { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:10;
+          background:rgba(10,21,32,.85); color:#b8c9d8; font-size:13px;
+          padding:8px 16px; border:1px solid #2a3a4a; border-radius:20px; white-space:nowrap; }
+  #nav { position:fixed; top:14px; left:14px; z-index:20; display:flex; gap:6px;
+         background:rgba(10,21,32,.9); border:1px solid #2a3a4a; border-radius:10px; padding:6px 8px; }
+  #nav a { color:#b8c9d8; text-decoration:none; font-size:12.5px; padding:4px 10px; border-radius:6px; white-space:nowrap; }
+  #nav a:hover { background:#1c2a38; color:#f0c239; }
+  #nav a.on { background:#e03c31; color:#fff; }
+  #panel { position:fixed; left:16px; bottom:16px; z-index:10; width:300px;
+           background:rgba(10,21,32,.94); border:1px solid #2a3a4a; border-radius:12px; padding:14px 16px;
+           color:#e8eef2; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  #panel label { font-size:12px; color:#93a5b8; }
+  input[type=range]{ width:100%; accent-color:#f5b301; }
+  .row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  button { background:#2a3a4a; color:#e8eef2; border:1px solid #3a4c5e; border-radius:8px; padding:5px 12px; cursor:pointer; font-size:13px; }
+  button.off { background:#1c2a38; }
+  #status { margin-top:8px; font-size:13px; color:#f0c239; min-height:36px; line-height:1.5; }
+  .legend { display:flex; gap:12px; margin-top:10px; font-size:12px; color:#93a5b8; }
+  .legend i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+</style>
+</head>
+<body>
+  <div id="nav">
+    <a href="index.html" class="on">莫比乌斯带</a>
+    <a href="holonomy.html">和乐性</a>
+    <a href="ggb/index.html">全局高斯博内</a>
+  </div>
+  <div id="hint">拖拽旋转 · 滚轮缩放 · 移动滑杆或按播放,看法向箭头走完一圈后是否反转</div>
+  <div id="panel">
+    <div class="row">
+      <button id="play">▶ 播放</button>
+      <label>沿中心线位置 u</label>
+    </div>
+    <input id="sweep" type="range" min="0" max="360" step="1" value="30">
+    <div class="row" style="margin-top:10px;">
+      <label style="white-space:nowrap;">半扭转数</label>
+    </div>
+    <input id="twist" type="range" min="0" max="2" step="1" value="1">
+    <div id="twistInfo" style="margin-top:6px; font-size:12px; color:#93a5b8;">半扭转 = 1 → 莫比乌斯带(不可定向)</div>
+    <div id="status"></div>
+    <div class="legend">
+      <span><i style="background:#1685a9"></i>石青 · 曲面</span>
+      <span><i style="background:#f5b301"></i>藤黄 · 中心线</span>
+      <span><i style="background:#e03c31"></i>朱砂 · 法向箭头</span>
+    </div>
+  </div>
+
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+  <script>
+    const COL = { bg:0x0a1520, surface:0x1685a9, line:0xf5b301, cur:0xe03c31, grid:0xd6ecf0 };
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(COL.bg);
+    const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 100);
+    camera.position.set(3.2, 2.2, 4.2);
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(4,6,3); scene.add(dir);
+    scene.add(new THREE.GridHelper(8, 16, 0x2a3a4a, 0x1c2a38));
+
+    const R = 2, W = 0.9, U_SEG = 200, V_SEG = 24;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array((U_SEG+1)*(V_SEG+1)*3);
+    const colors = new Float32Array((U_SEG+1)*(V_SEG+1)*3);
+    const mat = new THREE.MeshPhongMaterial({ vertexColors:true, side:THREE.DoubleSide, shininess:40 });
+
+    const C1 = { r:0x16/255, g:0x85/255, b:0xa9/255 };   // 石青
+    const C2 = { r:0x16/255*0.5, g:0x85/255*0.55, b:0xa9/255*0.5 };  // 深黛
+
+    function rebuildGeo(k){
+      for(let i=0;i<=U_SEG;i++){
+        const u = i/U_SEG * Math.PI*2;
+        for(let j=0;j<=V_SEG;j++){
+          const v = (j/V_SEG - 0.5) * W;
+          const idx = (i*(V_SEG+1)+j)*3;
+          const c = Math.cos(k*u/2), s = Math.sin(k*u/2);
+          positions[idx]   = (R + v*c)*Math.cos(u);
+          positions[idx+1] = v*s;
+          positions[idx+2] = (R + v*c)*Math.sin(u);
+          const cc = (i >> 3) % 2 === 0 ? C1 : C2;
+          colors[idx]   = cc.r;
+          colors[idx+1] = cc.g;
+          colors[idx+2] = cc.b;
+        }
+      }
+      const ind = [];
+      for(let i=0;i<U_SEG;i++)
+        for(let j=0;j<V_SEG;j++){
+          const a = i*(V_SEG+1)+j, b = a+1, c = a+(V_SEG+1), d = c+1;
+          ind.push(a,b,c, b,d,c);
+        }
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions),3));
+      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors),3));
+      geo.setIndex(ind);
+      geo.computeVertexNormals();
+    }
+    let twist = 1;
+    rebuildGeo(twist);
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+
+    const linePts = [];
+    for(let i=0;i<=U_SEG;i++){
+      const u = i/U_SEG*Math.PI*2;
+      linePts.push(new THREE.Vector3(R*Math.cos(u),0,R*Math.sin(u)));
+    }
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePts),
+      new THREE.LineBasicMaterial({ color:COL.line, transparent:true, opacity:0.9 }));
+    scene.add(line);
+
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),
+      new THREE.MeshBasicMaterial({ color:COL.cur }));
+    scene.add(marker);
+
+    // 实心圆润箭头
+    function makeSolidArrow(color, opts){
+      opts=opts||{};
+      const shaftR=opts.shaftR||0.033, headR=opts.headR||0.115, shaftL=opts.shaftL||0.60, headL=opts.headL||0.26;
+      const g=new THREE.Group();
+      const m=new THREE.MeshPhongMaterial({ color, emissive:color, emissiveIntensity:0.30, shininess:50 });
+      const shaft=new THREE.Mesh(new THREE.CylinderGeometry(shaftR, shaftR*0.85, shaftL, 18), m);
+      shaft.position.y=shaftL/2;
+      const head=new THREE.Mesh(new THREE.ConeGeometry(headR, headL, 22), m);
+      head.position.y=shaftL+headL/2;
+      g.add(shaft, head);
+      g.userData.len=shaftL+headL;
+      return g;
+    }
+    function placeArrow(arrow, origin, dir, len){
+      arrow.position.copy(origin);
+      const up=new THREE.Vector3(0,1,0), d=dir.clone().normalize();
+      if(Math.abs(up.dot(d))>0.9999){
+        arrow.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0), up.dot(d)<0 ? Math.PI : 0);
+      } else {
+        arrow.quaternion.setFromUnitVectors(up, d);
+      }
+      arrow.scale.set(1, len/arrow.userData.len, 1);
+    }
+    const arrow = makeSolidArrow(COL.cur);
+    scene.add(arrow);
+
+    function updateMarker(deg){
+      const u = deg*Math.PI/180, k = twist;
+      const s = Math.sin(k*u/2), c = Math.cos(k*u/2);
+      const cosu = Math.cos(u), sinu = Math.sin(u);
+      const x = R*cosu, z = R*sinu;
+      marker.position.set(x, 0, z);
+      const n = new THREE.Vector3(-R*cosu*s, R*c, -R*sinu*s).normalize();
+      placeArrow(arrow, new THREE.Vector3(x,0,z).addScaledVector(n, 0.05), n, 0.85);
+      const down = n.y < 0;
+      const atSeam = Math.abs(deg - 360) < 0.5;
+      let txt;
+      if (atSeam){
+        txt = down
+          ? "u = 360°:法向朝下 ↓ —— 走完一圈法向反了,这就是【不可定向】"
+          : "u = 360°:法向仍朝上 ↑ —— 一圈后法向没变,可定向";
+      } else {
+        txt = "u = " + Math.round(deg) + "°,法向" + (down?"朝下 ↓":"朝上 ↑");
+      }
+      document.getElementById('status').textContent = txt;
+    }
+
+    const sweepInput = document.getElementById('sweep');
+    sweepInput.addEventListener('input', ()=> updateMarker(+sweepInput.value));
+
+    const twistInput = document.getElementById('twist');
+    const twistInfo = document.getElementById('twistInfo');
+    function applyTwist(){
+      twist = +twistInput.value;
+      rebuildGeo(twist);
+      if (twist===0) twistInfo.textContent = '半扭转 = 0 → 圆柱带(可定向)';
+      if (twist===1) twistInfo.textContent = '半扭转 = 1 → 莫比乌斯带(不可定向)';
+      if (twist===2) twistInfo.textContent = '半扭转 = 2 → 全扭转带(可定向)';
+      updateMarker(+sweepInput.value);
+    }
+    twistInput.addEventListener('input', applyTwist);
+
+    const playBtn = document.getElementById('play');
+    let playing = false, angle = +sweepInput.value;
+    playBtn.addEventListener('click', ()=>{
+      playing = !playing;
+      playBtn.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+      playBtn.classList.toggle('off', playing);
+    });
+
+    function animate(){
+      requestAnimationFrame(animate);
+      if (playing){
+        angle += 0.6;
+        if (angle > 360) angle = 0;
+        sweepInput.value = angle;
+        updateMarker(angle);
+      }
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    addEventListener('resize', ()=>{
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    updateMarker(+sweepInput.value);
+  </script>
+</body>
+</html>
