@@ -1,0 +1,38 @@
+/* 文章阅读页排版 */
+.article-wrap{ padding: 40px 0 60px; }
+.article-head{ border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:40px; }
+.article-title{ font-size:30px; font-weight:500; line-height:1.4; letter-spacing:.02em; margin-top:10px; }
+.article-meta{ color:var(--dim); font-size:13px; margin-top:10px; }
+
+.article-body{ font-size:16.5px; line-height:2.0; color:var(--ink); }
+.article-body h1, .article-body h2, .article-body h3{
+  font-weight:600; line-height:1.5; margin: 1.8em 0 .8em; letter-spacing:.02em;
+}
+.article-body h2{ font-size:22px; }
+.article-body h3{ font-size:18px; }
+.article-body p{ margin: 1em 0; }
+.article-body strong{ font-weight:600; }
+.article-body em{ font-style:italic; }
+.article-body blockquote{
+  border-left:3px solid var(--accent); margin:1.4em 0; padding:.4em 1.2em;
+  color:var(--dim); background:rgba(176,144,112,.06);
+}
+.article-body img{
+  max-width:100%; height:auto; border-radius:8px; margin:1.6em auto; display:block;
+  box-shadow:0 6px 24px rgba(120,110,90,.12);
+}
+.article-body ol, .article-body ul{ margin:1em 0; padding-left:1.6em; }
+.article-body li{ margin:.4em 0; }
+.article-body a{ color:var(--accent); border-bottom:1px solid rgba(176,144,112,.4); }
+.article-body a:hover{ border-bottom-color:var(--accent); }
+
+/* 数学公式(KaTeX 或等宽 fallback) */
+.article-body .katex{ font-size:1.05em; }
+.article-body .katex-display{ margin:1.4em 0; overflow-x:auto; overflow-y:hidden; }
+
+.article-foot{ margin-top:60px; padding-top:24px; border-top:1px solid var(--line); display:flex; gap:14px; }
+
+@media (max-width:640px){
+  .article-title{ font-size:24px; }
+  .article-body{ font-size:15.5px; }
+}

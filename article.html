@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文章 · 光影与数学</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/article.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="shell nav" aria-label="主导航">
+      <a class="brand" href="./">光影与数学</a>
+      <div class="nav-links">
+        <a href="./#about">关于</a>
+        <a href="./#visual">可视化</a>
+        <a href="./#articles">文章</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="shell article-wrap">
+    <div class="article-head">
+      <p class="kicker" id="aDate"></p>
+      <h1 class="article-title" id="aTitle"></h1>
+      <p class="article-meta" id="aMeta"></p>
+    </div>
+    <article class="article-body" id="aBody">
+      <p class="empty">加载中……</p>
+    </article>
+    <footer class="article-foot">
+      <a class="btn" href="./#articles">← 返回文章列表</a>
+      <a class="btn" id="aWechat" href="#" style="display:none">微信原文 ↗</a>
+    </footer>
+  </main>
+
+  <script src="assets/marked.min.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if(!id){ document.getElementById('aBody').innerHTML='<p class="empty">未指定文章。</p>'; }
+    else {
+      fetch('articles/index.json').then(r=>r.json()).then(list=>{
+        const a = list.find(x=>x.id===id);
+        if(!a){ document.getElementById('aBody').innerHTML='<p class="empty">文章不存在。</p>'; return; }
+        document.title = a.title + ' · 光影与数学';
+        document.getElementById('aTitle').textContent = a.title;
+        document.getElementById('aDate').textContent = a.date;
+        document.getElementById('aMeta').textContent = a.author;
+        if(a.wechat){ const w=document.getElementById('aWechat'); w.href=a.wechat; w.style.display='inline-block'; }
+        return fetch(a.file).then(r=>r.text());
+      }).then(md=>{
+        if(md){
+          document.getElementById('aBody').innerHTML = marked.parse(md);
+          // 渲染数学公式
+          if(window.renderMathInElement){
+            renderMathInElement(document.getElementById('aBody'), {
+              delimiters: [
+                {left:'$$', right:'$$', display:true},
+                {left:'$', right:'$', display:false}
+              ],
+              throwOnError:false
+            });
+          }
+        }
+      }).catch(()=>{
+        document.getElementById('aBody').innerHTML='<p class="empty">文章加载失败。</p>';
+      });
+    }
+  </script>
+</body>
+</html>

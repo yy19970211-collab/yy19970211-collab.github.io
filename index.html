@@ -72,9 +72,8 @@
         <span class="sec-index">ARTICLES</span>
         <h2 class="sec-title">文章</h2>
       </div>
-      <p class="sec-copy dim">公众号文章将陆续整理到这里（待导入）。</p>
       <div class="article-list" id="articleList">
-        <p class="empty">还没有文章。第一篇正在路上……</p>
+        <p class="empty">加载中……</p>
       </div>
     </section>
   </main>
@@ -83,5 +82,22 @@
     <span>光影与数学</span>
     <span class="dim">印象派 · 简约 · 2026</span>
   </footer>
+
+  <script>
+    // 加载文章索引
+    fetch('articles/index.json').then(r=>r.json()).then(list=>{
+      const el = document.getElementById('articleList');
+      if(!list || !list.length){ el.innerHTML = '<p class="empty">还没有文章。第一篇正在路上……</p>'; return; }
+      el.innerHTML = list.map(a=>
+        '<article class="card article-card">'+
+          '<span class="card-kicker">'+a.date+' · '+a.author+'</span>'+
+          '<h3 class="card-title"><a href="article.html?id='+a.id+'">'+a.title+'</a></h3>'+
+          '<p class="card-copy">'+a.summary+'</p>'+
+          '<a class="btn" href="article.html?id='+a.id+'">阅读全文</a>'+
+        '</article>').join('');
+    }).catch(()=>{
+      document.getElementById('articleList').innerHTML='<p class="empty">文章加载失败。</p>';
+    });
+  </script>
 </body>
 </html>

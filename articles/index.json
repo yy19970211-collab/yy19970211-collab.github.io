@@ -1,0 +1,12 @@
+[
+  {
+    "id": "ggb-overview",
+    "title": "笔耕不辍：长笔记 全局高斯博内公式略观",
+    "date": "2026-04-16",
+    "author": "俞易",
+    "summary": "从球面上的角盈出发，串联内蕴曲率、局部高斯-博内公式、勒让德对欧拉公式的证明，以及亏格与手柄构造，一步步走到全局高斯博内定理 ∫∫K dA = 2πχ。",
+    "file": "articles/全局高斯博内公式略观.md",
+    "cover": "articles/img/fig02-clay.png",
+    "wechat": "https://mp.weixin.qq.com/s/3fgel_53C0PZERVooaaU3g"
+  }
+]
